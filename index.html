@@ -4,7 +4,6 @@
     <link rel="icon" href="data:,">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; connect-src * ws://* wss://*;">
     <title>Dots and Boxes - P2P Multiplayer</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 
@@ -483,14 +482,15 @@
             
             // Initialize PeerJS
             peer = new Peer({
-                host: '45.159.112.192',
-                port: 8000,
-                path: '/myapp',
-                secure: false,
-                key: 'peerjs',
-                debug: 3
+              key: 'peerjs', // Free PeerJS cloud key
+              debug: 3,
+              config: { 
+                iceServers: [
+                  { urls: 'stun:stun.l.google.com:19302' } // Free Google STUN
+                ]
+              }
             });
-            
+                        
             peer.on('open', (id) => {
                 console.log('[PEER] Connection opened with ID:', id);
                 
@@ -557,12 +557,8 @@
             
             // Initialize PeerJS
             peer = new Peer({
-                debug: 3,
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' }
-                    ]
-                }
+              key: 'peerjs', // Same key as host
+              debug: 3
             });
             
             peer.on('open', (id) => {
