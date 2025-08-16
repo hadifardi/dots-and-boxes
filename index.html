@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
     <link rel="icon" href="data:,">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dots and Boxes - P2P Multiplayer</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+
     <style>
         :root {
             --player1-color: #3498db;
@@ -159,6 +160,7 @@
             background-color: rgba(255, 255, 255, 0.3);
             cursor: pointer;
             transition: background-color 0.3s;
+            touch-action: none;
         }
         
         .horizontal-line {
@@ -278,7 +280,12 @@
             }
             
             .grid-container {
-                padding: 10px;
+                padding: 5px;
+            }
+
+            .dot {
+                width: 8px;
+                height: 8px;
             }
         }
     </style>
@@ -489,7 +496,7 @@
                 ]
               }
             });
-            
+                        
             peer.on('open', (id) => {
                 console.log('[PEER] Connection opened with ID:', id);
                 
@@ -716,30 +723,35 @@
         
         // Draw a line on the grid
         function drawLine(container, row, col, type, playerIndex, cellSize, interactive) {
-            const line = document.createElement('div');
-            line.className = `${type}-line`;
-            
-            if (playerIndex !== null) {
-                line.classList.add(playerIndex === 0 ? 'player1-line' : 'player2-line');
-            }
-            
-            if (type === 'horizontal') {
-                line.style.width = `${cellSize}px`;
-                line.style.left = `${col * cellSize}px`;
-                line.style.top = `${row * cellSize}px`;
-            } else { // vertical
-                line.style.height = `${cellSize}px`;
-                line.style.left = `${col * cellSize}px`;
-                line.style.top = `${row * cellSize}px`;
-            }
-            
-            if (interactive) {
-                line.addEventListener('click', () => {
-                    makeMove(row, col, type);
-                });
-            }
-            
-            container.appendChild(line);
+          const line = document.createElement('div');
+          line.className = `${type}-line`;
+        
+          if (playerIndex !== null) {
+            line.classList.add(playerIndex === 0 ? 'player1-line' : 'player2-line');
+          }
+        
+          if (type === 'horizontal') {
+            line.style.width = `${cellSize}px`;
+            line.style.left = `${col * cellSize}px`;
+            line.style.top = `${row * cellSize}px`;
+          } else { // vertical
+            line.style.height = `${cellSize}px`;
+            line.style.left = `${col * cellSize}px`;
+            line.style.top = `${row * cellSize}px`;
+          }
+        
+          if (interactive) {
+            // Add mouse click event (for desktop)
+            line.addEventListener('click', () => makeMove(row, col, type));
+        
+            // Add touch event (for mobile)
+            line.addEventListener('touchstart', (e) => {
+              e.preventDefault(); // Prevent scrolling/zooming
+              makeMove(row, col, type);
+            }, { passive: false });
+          }
+        
+          container.appendChild(line);
         }
         
         // Check if a line is already drawn
