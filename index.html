@@ -635,17 +635,19 @@
                 updateTurnIndicators();
             } 
             else if (data.type === 'move') {
+                // Add move to game state
                 gameState.moves.push(data.move);
                 
+                // Switch turns - CRITICAL FIX: Only change turn if the move came from the current player
+                if (gameState.currentPlayer === data.move.player) {
+                    gameState.currentPlayer = (data.move.player + 1) % 2;
+                }
+                
+                // Render updated grid
                 renderGrid(
                     hostSection.style.display === 'block' ? hostGameBoard : joinGameBoard,
                     gameState.gridSize
                 );
-                
-                // Update turn only if it wasn't already updated
-                if (gameState.currentPlayer === data.move.player) {
-                    gameState.currentPlayer = (data.move.player + 1) % 2;
-                }
                 
                 updateTurnIndicators();
             } 
@@ -705,10 +707,11 @@
                 drawLine(container, move.row, move.col, move.type, move.player, cellSize, false);
             });
             
-            // Draw potential moves if it's the current player's turn
+            // Only enable moves for the current player
             const isHost = container === hostGameBoard;
             const currentPlayerIndex = isHost ? 0 : 1;
             
+            // CRITICAL FIX: Only enable moves if it's this player's turn
             if (gameState.currentPlayer === currentPlayerIndex && conn && conn.open) {
                 // Horizontal lines
                 for (let row = 0; row <= gridSize; row++) {
@@ -738,7 +741,8 @@
             if (playerIndex !== null) {
                 line.classList.add(playerIndex === 0 ? 'player1-line' : 'player2-line');
             } else if (!interactive) {
-                line.style.display = 'none'; // Hide non-interactive, non-player lines
+                // Hide non-interactive lines that aren't player moves
+                line.style.display = 'none';
             }
             
             if (type === 'horizontal') {
@@ -779,7 +783,11 @@
             const isHost = hostSection.style.display === 'block';
             const currentPlayerIndex = isHost ? 0 : 1;
             
-            if (gameState.currentPlayer !== currentPlayerIndex) return;
+            // CRITICAL FIX: Only allow moves when it's the player's turn
+            if (gameState.currentPlayer !== currentPlayerIndex) {
+                console.log(`Not your turn! Current player: ${gameState.currentPlayer}, You are: ${currentPlayerIndex}`);
+                return;
+            }
             
             const move = {
                 row: row,
