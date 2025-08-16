@@ -661,13 +661,15 @@
                 updateTurnIndicators();
             } else if (data.type === 'move') {
                 gameState.moves.push(data.move);
+
+                // Switch turns FIRST
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % 2;
                 
+                // THEN render the grid
                 renderGrid(
                     hostSection.style.display === 'block' ? hostGameBoard : joinGameBoard,
                     gameState.gridSize
                 );
-                
-                gameState.currentPlayer = (gameState.currentPlayer + 1) % 2;
                 updateTurnIndicators();
             } else if (data.type === 'playerName') {
                 gameState.playerNames[data.playerIndex] = data.name;
@@ -679,6 +681,9 @@
                     guestPlayer1Name.textContent = gameState.playerNames[0] || 'Player 1';
                     guestPlayer2Name.textContent = gameState.playerNames[1] || 'Player 2';
                 }
+
+                sendGameState();
+                
             } else if (data.type === 'requestState') {
                 sendGameState();
             }
@@ -819,14 +824,16 @@
                 });
             }
             
-            // Render grid
+            // Switch turns FIRST
+            gameState.currentPlayer = (playerIndex + 1) % 2;
+
+            // THEN render the grid with the updated state
             renderGrid(
                 isHost ? hostGameBoard : joinGameBoard,
                 gameState.gridSize
             );
             
             // Switch turns
-            gameState.currentPlayer = (playerIndex + 1) % 2;
             updateTurnIndicators();
         }
         
