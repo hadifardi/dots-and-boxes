@@ -477,7 +477,13 @@
             };
             
             // Initialize PeerJS
-            peer = new Peer();
+            peer = new Peer({
+              host: '45.159.112.192',  // Replace with your server's IP
+              port: 8000,
+              path: '/myapp',
+              secure: true,           // Set to true if using HTTPS
+              key: 'peerjs'            // Matches the server's default key
+            });
             
             peer.on('open', (id) => {
                 // Show host section
