@@ -160,6 +160,9 @@
             background-color: rgba(255, 255, 255, 0.3);
             cursor: pointer;
             transition: background-color 0.3s;
+            min-height: 30px;
+            min-width: 30px; 
+            touch-action: none;
         }
         
         .horizontal-line {
@@ -279,7 +282,12 @@
             }
             
             .grid-container {
-                padding: 10px;
+                padding: 5px;
+            }
+
+            .dot {
+                width: 8px;
+                height: 8px;
             }
         }
     </style>
@@ -717,30 +725,35 @@
         
         // Draw a line on the grid
         function drawLine(container, row, col, type, playerIndex, cellSize, interactive) {
-            const line = document.createElement('div');
-            line.className = `${type}-line`;
-            
-            if (playerIndex !== null) {
-                line.classList.add(playerIndex === 0 ? 'player1-line' : 'player2-line');
-            }
-            
-            if (type === 'horizontal') {
-                line.style.width = `${cellSize}px`;
-                line.style.left = `${col * cellSize}px`;
-                line.style.top = `${row * cellSize}px`;
-            } else { // vertical
-                line.style.height = `${cellSize}px`;
-                line.style.left = `${col * cellSize}px`;
-                line.style.top = `${row * cellSize}px`;
-            }
-            
-            if (interactive) {
-                line.addEventListener('click', () => {
-                    makeMove(row, col, type);
-                });
-            }
-            
-            container.appendChild(line);
+          const line = document.createElement('div');
+          line.className = `${type}-line`;
+        
+          if (playerIndex !== null) {
+            line.classList.add(playerIndex === 0 ? 'player1-line' : 'player2-line');
+          }
+        
+          if (type === 'horizontal') {
+            line.style.width = `${cellSize}px`;
+            line.style.left = `${col * cellSize}px`;
+            line.style.top = `${row * cellSize}px`;
+          } else { // vertical
+            line.style.height = `${cellSize}px`;
+            line.style.left = `${col * cellSize}px`;
+            line.style.top = `${row * cellSize}px`;
+          }
+        
+          if (interactive) {
+            // Add mouse click event (for desktop)
+            line.addEventListener('click', () => makeMove(row, col, type));
+        
+            // Add touch event (for mobile)
+            line.addEventListener('touchstart', (e) => {
+              e.preventDefault(); // Prevent scrolling/zooming
+              makeMove(row, col, type);
+            }, { passive: false });
+          }
+        
+          container.appendChild(line);
         }
         
         // Check if a line is already drawn
