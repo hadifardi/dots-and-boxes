@@ -165,12 +165,10 @@
         
         .horizontal-line {
             height: 4px;
-            background-color: rgba(255, 255, 255, 0.3);
         }
         
         .vertical-line {
             width: 4px;
-            background-color: rgba(255, 255, 255, 0.3);
         }
         
         .horizontal-line:hover, .vertical-line:hover {
@@ -270,10 +268,6 @@
         
         .disconnected {
             background-color: #e74c3c;
-        }
-        
-        .d-none {
-            display: none;
         }
         
         @media (max-width: 768px) {
@@ -383,11 +377,6 @@
                     <input type="text" id="gameIdInput" placeholder="Enter game ID">
                 </div>
                 
-                <div class="form-group">
-                    <label for="guestPlayerName">Your Name:</label>
-                    <input type="text" id="guestPlayerName" placeholder="Enter your name" value="Player">
-                </div>
-                
                 <div style="text-align: center; margin: 20px 0;">
                     <button id="connectToGameBtn" class="btn btn-primary">Connect to Game</button>
                 </div>
@@ -437,7 +426,6 @@
         const hostSection = document.getElementById('hostSection');
         const joinSection = document.getElementById('joinSection');
         const playerNameInput = document.getElementById('playerName');
-        const guestPlayerNameInput = document.getElementById('guestPlayerName');
         const gridSizeInput = document.getElementById('gridSize');
         const createGameBtn = document.getElementById('createGameBtn');
         const joinGameBtn = document.getElementById('joinGameBtn');
@@ -468,11 +456,6 @@
         function init() {
             console.log('[INIT] Game initialization started');
             
-            // Set random player names
-            const randomNum = Math.floor(Math.random() * 1000);
-            playerNameInput.value = `Player${randomNum}`;
-            guestPlayerNameInput.value = `Player${randomNum}`;
-            
             // Event listeners
             createGameBtn.addEventListener('click', createGame);
             joinGameBtn.addEventListener('click', showJoinSection);
@@ -480,6 +463,9 @@
             connectToGameBtn.addEventListener('click', connectToGame);
             hostEndGameBtn.addEventListener('click', endGame);
             guestEndGameBtn.addEventListener('click', endGame);
+            
+            // Set default player name
+            playerNameInput.value = `Player${Math.floor(Math.random() * 1000)}`;
         }
         
         // Create a new game
@@ -526,7 +512,6 @@
                 // Initialize player names
                 gameState.playerNames[0] = currentPlayer;
                 hostPlayer1Name.textContent = currentPlayer;
-                hostPlayer2Name.textContent = 'Waiting for player...';
                 
                 // Render the grid
                 renderGrid(hostGameBoard, gridSize);
@@ -541,6 +526,8 @@
                 
                 // Add player to game state
                 gameState.players.push(conn.peer);
+                gameState.playerNames[1] = 'Player 2';
+                hostPlayer2Name.textContent = 'Player 2';
                 hostPlayerInfo.classList.remove('d-none');
                 updateStatus('host', 'Player connected!', 'connected');
                 
@@ -556,7 +543,7 @@
         
         // Show join game section
         function showJoinSection() {
-            currentPlayer = guestPlayerNameInput.value.trim() || 'Player';
+            currentPlayer = playerNameInput.value.trim() || 'Player';
             setupSection.style.display = 'none';
             hostSection.style.display = 'none';
             joinSection.style.display = 'block';
@@ -566,7 +553,6 @@
         // Connect to an existing game
         function connectToGame() {
             const gameId = gameIdInput.value.trim();
-            currentPlayer = guestPlayerNameInput.value.trim() || 'Player';
             
             if (!gameId) {
                 alert('Please enter a game ID');
@@ -609,13 +595,6 @@
                 updateStatus('guest', 'Connected to game!', 'connected');
                 guestPlayerInfo.classList.remove('d-none');
                 
-                // Send player name to host
-                conn.send({
-                    type: 'playerName',
-                    name: currentPlayer,
-                    playerIndex: 1
-                });
-                
                 // Request game state from host
                 conn.send({ type: 'requestState' });
             });
@@ -645,7 +624,6 @@
                 
                 // Update player names
                 if (hostSection.style.display === 'block') {
-                    hostPlayer1Name.textContent = gameState.playerNames[0] || 'Player 1';
                     hostPlayer2Name.textContent = gameState.playerNames[1] || 'Player 2';
                 } else {
                     guestPlayer1Name.textContent = gameState.playerNames[0] || 'Player 1';
@@ -661,29 +639,23 @@
                 updateTurnIndicators();
             } else if (data.type === 'move') {
                 gameState.moves.push(data.move);
-
-                // Switch turns FIRST
-                gameState.currentPlayer = (gameState.currentPlayer + 1) % 2;
                 
-                // THEN render the grid
                 renderGrid(
                     hostSection.style.display === 'block' ? hostGameBoard : joinGameBoard,
                     gameState.gridSize
                 );
+                
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % 2;
                 updateTurnIndicators();
             } else if (data.type === 'playerName') {
                 gameState.playerNames[data.playerIndex] = data.name;
                 
                 if (hostSection.style.display === 'block') {
-                    hostPlayer1Name.textContent = gameState.playerNames[0] || 'Player 1';
-                    hostPlayer2Name.textContent = gameState.playerNames[1] || 'Player 2';
+                    hostPlayer2Name.textContent = data.name;
                 } else {
-                    guestPlayer1Name.textContent = gameState.playerNames[0] || 'Player 1';
-                    guestPlayer2Name.textContent = gameState.playerNames[1] || 'Player 2';
+                    guestPlayer1Name.textContent = gameState.playerNames[0];
+                    guestPlayer2Name.textContent = gameState.playerNames[1];
                 }
-
-                sendGameState();
-                
             } else if (data.type === 'requestState') {
                 sendGameState();
             }
@@ -751,35 +723,35 @@
         
         // Draw a line on the grid
         function drawLine(container, row, col, type, playerIndex, cellSize, interactive) {
-            const line = document.createElement('div');
-            line.className = `${type}-line`;
-            
-            if (playerIndex !== null) {
-                line.classList.add(playerIndex === 0 ? 'player1-line' : 'player2-line');
-            }
-            
-            if (type === 'horizontal') {
-                line.style.width = `${cellSize}px`;
-                line.style.left = `${col * cellSize}px`;
-                line.style.top = `${row * cellSize}px`;
-            } else { // vertical
-                line.style.height = `${cellSize}px`;
-                line.style.left = `${col * cellSize}px`;
-                line.style.top = `${row * cellSize}px`;
-            }
-            
-            if (interactive) {
-                // Add mouse click event (for desktop)
-                line.addEventListener('click', () => makeMove(row, col, type));
-            
-                // Add touch event (for mobile)
-                line.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); // Prevent scrolling/zooming
-                    makeMove(row, col, type);
-                }, { passive: false });
-            }
-            
-            container.appendChild(line);
+          const line = document.createElement('div');
+          line.className = `${type}-line`;
+        
+          if (playerIndex !== null) {
+            line.classList.add(playerIndex === 0 ? 'player1-line' : 'player2-line');
+          }
+        
+          if (type === 'horizontal') {
+            line.style.width = `${cellSize}px`;
+            line.style.left = `${col * cellSize}px`;
+            line.style.top = `${row * cellSize}px`;
+          } else { // vertical
+            line.style.height = `${cellSize}px`;
+            line.style.left = `${col * cellSize}px`;
+            line.style.top = `${row * cellSize}px`;
+          }
+        
+          if (interactive) {
+            // Add mouse click event (for desktop)
+            line.addEventListener('click', () => makeMove(row, col, type));
+        
+            // Add touch event (for mobile)
+            line.addEventListener('touchstart', (e) => {
+              e.preventDefault(); // Prevent scrolling/zooming
+              makeMove(row, col, type);
+            }, { passive: false });
+          }
+        
+          container.appendChild(line);
         }
         
         // Check if a line is already drawn
@@ -814,27 +786,27 @@
             // Add to local state
             gameState.moves.push(move);
             
-            // Update player names if not set
-            if (!gameState.playerNames[playerIndex]) {
-                gameState.playerNames[playerIndex] = currentPlayer;
-                conn.send({
-                    type: 'playerName',
-                    name: currentPlayer,
-                    playerIndex: playerIndex
-                });
-            }
-            
-            // Switch turns FIRST
-            gameState.currentPlayer = (playerIndex + 1) % 2;
-
-            // THEN render the grid with the updated state
+            // Render grid
             renderGrid(
                 isHost ? hostGameBoard : joinGameBoard,
                 gameState.gridSize
             );
             
             // Switch turns
+            gameState.currentPlayer = (playerIndex + 1) % 2;
             updateTurnIndicators();
+            
+            // Send updated player name if needed
+            if (isHost && !gameState.playerNames[1]) {
+                gameState.playerNames[1] = currentPlayer;
+                conn.send({
+                    type: 'playerName',
+                    name: currentPlayer,
+                    playerIndex: 1
+                });
+                
+                hostPlayer2Name.textContent = currentPlayer;
+            }
         }
         
         // Update turn indicators
