@@ -268,6 +268,19 @@
         .disconnected {
             background-color: #e74c3c;
         }
+
+        .potential-line {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .interactive-line {
+            background-color: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+        }
+        
+        .interactive-line:hover {
+            background-color: rgba(255, 255, 255, 0.7);
+        }
         
         @media (max-width: 768px) {
             .container {
@@ -1101,7 +1114,7 @@
             }
         }
         
-        // Render the game grid
+        // Render the game grid - MODIFIED TO ALWAYS SHOW POTENTIAL LINES
         function renderGrid(container, gridSize) {
             container.innerHTML = '';
             const cellSize = Math.min(400 / gridSize, 60);
@@ -1121,7 +1134,7 @@
                 }
             }
             
-            // Draw existing moves (player lines)
+            // Draw existing moves
             gameState.moves.forEach(move => {
                 drawLine(container, move.row, move.col, move.type, move.player, cellSize, false);
             });
@@ -1150,25 +1163,23 @@
             }
         }
         
-        // Draw a line on the grid
+        // Draw a line on the grid - MODIFIED TO ALWAYS SHOW VISUAL LINES
         function drawLine(container, row, col, type, playerIndex, cellSize, interactive) {
             const line = document.createElement('div');
             line.className = `${type}-line`;
             
-            // Set player color if it's a taken line
             if (playerIndex !== null) {
+                // Player-colored line (already taken)
                 line.classList.add(playerIndex === 0 ? 'player1-line' : 'player2-line');
-            } 
-            // Set style for available lines
-            else {
+            } else {
+                // Potential line (not taken)
+                line.classList.add('potential-line');
+                
                 if (interactive) {
-                    line.classList.add('available-line');
-                } else {
-                    line.classList.add('non-interactive-line');
+                    line.classList.add('interactive-line');
                 }
             }
             
-            // Position the line
             if (type === 'horizontal') {
                 line.style.width = `${cellSize}px`;
                 line.style.left = `${col * cellSize}px`;
@@ -1179,7 +1190,6 @@
                 line.style.top = `${row * cellSize}px`;
             }
             
-            // Add interactivity if it's the player's turn
             if (interactive) {
                 // Add mouse click event
                 line.addEventListener('click', () => makeMove(row, col, type));
@@ -1312,7 +1322,6 @@
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', init);
     </script>
-</body>
-</html>
+    
 </body>
 </html>
